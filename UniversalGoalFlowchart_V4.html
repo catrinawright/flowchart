@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Universal Material &amp; Goal Flowchart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  body { background:#f1f5f9; margin:0; }
+  .app-root { font-family:'DM Sans',sans-serif; }
+  .display-font { font-family:'DM Serif Display',serif; }
+  .card-hover { transition:all 0.15s ease; }
+  .card-hover:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+  .fade-in { animation:fadeIn 0.2s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+  .line-clamp-2 { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect, useMemo } = React;
+
+/* ── ICON COMPONENTS ─────────────────────────────────────────────────────── */
+const Icon = ({ d, size=18, cls='' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+    strokeLinejoin="round" className={cls} style={{flexShrink:0}}>
+    {d}
+  </svg>
+);
+const Target      = ({size,className}) => <Icon size={size} cls={className} d={<><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>}/>;
+const BookOpen    = ({size,className}) => <Icon size={size} cls={className} d={<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>}/>;
+const Activity    = ({size,className}) => <Icon size={size} cls={className} d={<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>}/>;
+const Hand        = ({size,className}) => <Icon size={size} cls={className} d={<path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8M6 14v0a6 6 0 0 0 6 6h2a8 8 0 0 0 8-8v-3a1 1 0 0 0-1-1h-5"/>}/>;
+const CheckCircle2= ({size,className}) => <Icon size={size} cls={className} d={<><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></>}/>;
+const BrainCircuit= ({size,className}) => <Icon size={size} cls={className} d={<><path d="M12 4.5a2.5 2.5 0 0 0-4.96-.46 2.5 2.5 0 0 0-1.98 3 2.5 2.5 0 0 0-1.32 4.24 3 3 0 0 0 .34 5.58 2.5 2.5 0 0 0 2.96 3.08 2.5 2.5 0 0 0 4.91.05L12 20V4.5z"/><path d="M16 8V5c0-1.1.9-2 2-2"/><path d="M12 13h4"/><path d="M12 18h6a2 2 0 0 1 2 2v1"/><path d="M12 8h8"/><path d="M20.5 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/><path d="M16.5 13a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/><path d="M20.5 21a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/><path d="M18.5 3a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/></>}/>;
+const Settings2   = ({size,className}) => <Icon size={size} cls={className} d={<><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></>}/>;
+const PackageSearch=({size,className}) => <Icon size={size} cls={className} d={<><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/><circle cx="18.5" cy="15.5" r="2.5"/><path d="M20.27 17.27 22 19"/></>}/>;
+const Users       = ({size,className}) => <Icon size={size} cls={className} d={<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}/>;
+const Search      = ({size,className}) => <Icon size={size} cls={className} d={<><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></>}/>;
+const X           = ({size,className}) => <Icon size={size} cls={className} d={<><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>}/>;
+const BookMarked  = ({size,className}) => <Icon size={size} cls={className} d={<><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/><polyline points="9 10 12 13 15 10"/></>}/>;
+const AlertCircle = ({size,className}) => <Icon size={size} cls={className} d={<><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></>}/>;
+const Layers      = ({size,className}) => <Icon size={size} cls={className} d={<><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>}/>;
+const ChevronDown = ({size,className}) => <Icon size={size} cls={className} d={<polyline points="6 9 12 15 18 9"/>}/>;
+const ChevronUp   = ({size,className}) => <Icon size={size} cls={className} d={<polyline points="18 15 12 9 6 15"/>}/>;
+const LayoutGrid  = ({size,className}) => <Icon size={size} cls={className} d={<><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></>}/>;
+const Eye         = ({size,className}) => <Icon size={size} cls={className} d={<><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></>}/>;
+const Zap         = ({size,className}) => <Icon size={size} cls={className} d={<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>}/>;
+const MousePointer= ({size,className}) => <Icon size={size} cls={className} d={<><path d="m4 4 7.07 17 2.51-7.39L21 11.07z"/></>}/>;
+const MessageSquare=({size,className})=> <Icon size={size} cls={className} d={<><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></>}/>;
+const Cpu         = ({size,className}) => <Icon size={size} cls={className} d={<><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M20 15h2M9 2v2M9 20v2M2 9h2M20 9h2"/></>}/>;
+const BarChart2   = ({size,className}) => <Icon size={size} cls={className} d={<><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></>}/>;
+const CheckSquare = ({size,className}) => <Icon size={size} cls={className} d={<><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></>}/>;
+
+/* ── STANDARDS DATABASE ──────────────────────────────────────────────────── */
+const standardsDB = [
+  // CCSS ELA 11-12 — LITERATURE
+  {id:'RL.11-12.1',framework:'CCSS',subject:'Literature',grade:'11-12',text:"Cite strong and thorough textual evidence to support analysis of what the text says explicitly as well as inferences drawn from the text, including determining where the text leaves matters uncertain.",skill:'citing evidence and making inferences from literary text'},
+  {id:'RL.11-12.2',framework:'CCSS',subject:'Literature',grade:'11-12',text:"Determine two or more themes or central ideas of a text and analyze their development over the course of the text, including how they interact and build on one another to produce a complex account; provide an objective summary of the text.",skill:'identifying themes and summarizing literary text'},
+  {id:'RL.11-12.3',framework:'CCSS',subject:'Literature',grade:'11-12',text:"Analyze the impact of the author's choices regarding how to develop and relate elements of a story or drama (e.g., where a story is set, how the action is ordered, how the characters are introduced and developed).",skill:'character and plot development'},
+  {id:'RL.11-12.4',framework:'CCSS',subject:'Literature',grade:'11-12',text:"Determine the meaning of words and phrases as they are used in the text, including figurative and connotative meanings; analyze the impact of specific word choices on meaning and tone, including words with multiple meanings.",skill:'vocabulary and figurative language in literary text'},
+  {id:'RL.11-12.5',framework:'CCSS',subject:'Literature',grade:'11-12',text:"Analyze how an author's choices concerning how to structure specific parts of a text (e.g., the choice of where to begin or end a story, the choice to provide a comedic or tragic resolution) contribute to its overall structure and meaning as well as its aesthetic impact.",skill:"author's structural choices and their effect on meaning"},
+  {id:'RL.11-12.6',framework:'CCSS',subject:'Literature',grade:'11-12',text:"Analyze a case in which grasping a point of view requires distinguishing what is directly stated in a text from what is really meant (e.g., satire, sarcasm, irony, or understatement).",skill:'point of view and irony in literary text'},
+  {id:'RL.11-12.7',framework:'CCSS',subject:'Literature',grade:'11-12',text:"Analyze multiple interpretations of a story, drama, or poem (e.g., recorded or live production of a play or recorded novel or poetry), evaluating how each version interprets the source text.",skill:'comparing interpretations of literary works'},
+  {id:'RL.11-12.9',framework:'CCSS',subject:'Literature',grade:'11-12',text:"Demonstrate knowledge of eighteenth-, nineteenth-, and early-twentieth-century foundational works of American literature, including how two or more texts from the same period treat similar themes or topics.",skill:'American literary heritage and thematic comparison across texts'},
+  // CCSS ELA 11-12 — INFORMATIONAL TEXT
+  {id:'RI.11-12.1',framework:'CCSS',subject:'Informational Text',grade:'11-12',text:"Cite strong and thorough textual evidence to support analysis of what the text says explicitly as well as inferences drawn from the text, including determining where the text leaves matters uncertain.",skill:'citing evidence and making inferences from informational text'},
+  {id:'RI.11-12.2',framework:'CCSS',subject:'Informational Text',grade:'11-12',text:"Determine two or more central ideas of a text and analyze their development over the course of the text, including how they interact and build on one another to provide a complex analysis; provide an objective summary of the text.",skill:'identifying central ideas and summarizing informational text'},
+  {id:'RI.11-12.3',framework:'CCSS',subject:'Informational Text',grade:'11-12',text:"Analyze a complex set of ideas or sequence of events and explain how specific individuals, ideas, or events interact and develop over the course of the text.",skill:'sequence of events and idea development in informational text'},
+  {id:'RI.11-12.4',framework:'CCSS',subject:'Informational Text',grade:'11-12',text:"Determine the meaning of words and phrases as they are used in a text, including figurative, connotative, and technical meanings; analyze how an author uses and refines the meaning of a key term over the course of a text.",skill:'vocabulary and technical language in informational text'},
+  {id:'RI.11-12.6',framework:'CCSS',subject:'Informational Text',grade:'11-12',text:"Determine an author's point of view or purpose in a text in which the rhetoric is particularly effective, analyzing how style and content contribute to the power, persuasiveness, or beauty of the text.",skill:"author's purpose and rhetorical effectiveness"},
+  {id:'RI.11-12.7',framework:'CCSS',subject:'Informational Text',grade:'11-12',text:"Integrate and evaluate multiple sources of information presented in different media or formats (e.g., visually, quantitatively) as well as in words in order to address a question or solve a problem.",skill:'integrating and evaluating information across multiple sources and formats'},
+  {id:'RI.11-12.8',framework:'CCSS',subject:'Informational Text',grade:'11-12',text:"Delineate and evaluate the reasoning in seminal U.S. texts, including the application of constitutional principles and use of legal reasoning and the premises, purposes, and arguments in works of public advocacy.",skill:"reasoning and argument in U.S. foundational documents"},
+  {id:'RI.11-12.9',framework:'CCSS',subject:'Informational Text',grade:'11-12',text:"Analyze seventeenth-, eighteenth-, and nineteenth-century foundational U.S. documents of historical and literary significance (including The Declaration of Independence, the Preamble to the Constitution, the Bill of Rights, and Lincoln's Second Inaugural Address) for their themes, purposes, and rhetorical features.",skill:'foundational U.S. documents and their historical significance'},
+  // CCSS ELA 11-12 — WRITING
+  {id:'W.11-12.1',framework:'CCSS',subject:'Writing',grade:'11-12',text:"Write arguments to support claims in an analysis of substantive topics or texts, using valid reasoning and relevant and sufficient evidence. (a) Introduce precise, knowledgeable claims and distinguish from alternate or opposing claims. (b) Develop claims and counterclaims fairly and thoroughly, supplying relevant evidence.",skill:'argumentative writing with claims and supporting evidence'},
+  {id:'W.11-12.2',framework:'CCSS',subject:'Writing',grade:'11-12',text:"Write informative/explanatory texts to examine and convey complex ideas, concepts, and information clearly and accurately through the effective selection, organization, and analysis of content. Introduce a topic and organize ideas so each new element builds on what precedes it.",skill:'informative and explanatory writing with clear organization'},
+  {id:'W.11-12.3',framework:'CCSS',subject:'Writing',grade:'11-12',text:"Write narratives to develop real or imagined experiences or events using effective technique, well-chosen details, and well-structured event sequences. Engage and orient the reader; use narrative techniques such as dialogue, pacing, description, and reflection.",skill:'narrative writing with structured event sequences'},
+  {id:'W.11-12.4',framework:'CCSS',subject:'Writing',grade:'11-12',text:"Produce clear and coherent writing in which the development, organization, and style are appropriate to task, purpose, and audience.",skill:'producing writing appropriate to task, purpose, and audience'},
+  {id:'W.11-12.5',framework:'CCSS',subject:'Writing',grade:'11-12',text:"Develop and strengthen writing as needed by planning, revising, editing, rewriting, or trying a new approach, focusing on addressing what is most significant for a specific purpose and audience.",skill:'planning, revising, and editing writing'},
+  {id:'W.11-12.6',framework:'CCSS',subject:'Writing',grade:'11-12',text:"Use technology, including the Internet, to produce, publish, and update individual or shared writing products in response to ongoing feedback, including new arguments or information.",skill:'using technology to produce and publish writing'},
+  {id:'W.11-12.9',framework:'CCSS',subject:'Writing',grade:'11-12',text:"Draw evidence from literary or informational texts to support analysis, reflection, and research. Apply grades 11-12 Reading standards to literature and to literary nonfiction.",skill:'drawing evidence from texts to support writing'},
+  {id:'W.11-12.10',framework:'CCSS',subject:'Writing',grade:'11-12',text:"Write routinely over extended time frames (time for research, reflection, and revision) and shorter time frames (a single sitting or a day or two) for a range of tasks, purposes, and audiences.",skill:'writing routinely across a range of tasks and time frames'},
+  // CCSS ELA 11-12 — SPEAKING & LISTENING
+  {id:'SL.11-12.1',framework:'CCSS',subject:'Speaking & Listening',grade:'11-12',text:"Initiate and participate effectively in a range of collaborative discussions (one-on-one, in groups, and teacher-led) with diverse partners on grades 11-12 topics, texts, and issues, building on others' ideas and expressing their own clearly and persuasively.",skill:'collaborative discussion and oral communication'},
+  {id:'SL.11-12.2',framework:'CCSS',subject:'Speaking & Listening',grade:'11-12',text:"Integrate multiple sources of information presented in diverse formats and media in order to make informed decisions and solve problems, evaluating the credibility and accuracy of each source.",skill:'evaluating credibility and accuracy of information across media'},
+  {id:'SL.11-12.4',framework:'CCSS',subject:'Speaking & Listening',grade:'11-12',text:"Present information, findings, and supporting evidence, conveying a clear and distinct perspective, such that listeners can follow the line of reasoning and the organization, development, substance, and style are appropriate to purpose, audience, and task.",skill:'presenting information with organized reasoning and supporting evidence'},
+  {id:'SL.11-12.5',framework:'CCSS',subject:'Speaking & Listening',grade:'11-12',text:"Make strategic use of digital media (e.g., textual, graphical, audio, visual, and interactive elements) in presentations to enhance understanding of findings, reasoning, and evidence and to add interest.",skill:'using digital media strategically in presentations'},
+  {id:'SL.11-12.6',framework:'CCSS',subject:'Speaking & Listening',grade:'11-12',text:"Adapt speech to a variety of contexts and tasks, demonstrating a command of formal English when indicated or appropriate.",skill:'adapting communication to formal and informal contexts'},
+  // CCSS ELA 11-12 — LANGUAGE
+  {id:'L.11-12.1',framework:'CCSS',subject:'Language',grade:'11-12',text:"Demonstrate command of the conventions of standard English grammar and usage when writing or speaking. (a) Apply understandings that conventions are required in some communication contexts but not others. (b) Use appropriate resources to resolve grammar usage issues.",skill:'standard English grammar and usage conventions'},
+  {id:'L.11-12.3',framework:'CCSS',subject:'Language',grade:'11-12',text:"Apply knowledge of language to understand how language functions in different contexts, to make effective choices for meaning or style, and to comprehend more fully when reading or listening. (a) Vary sentence structure using simple and compound sentence structures.",skill:'applying knowledge of language in different contexts and for different purposes'},
+  {id:'L.11-12.4',framework:'CCSS',subject:'Language',grade:'11-12',text:"Determine or clarify the meaning of unknown and multiple-meaning words and phrases based on grades 11-12 reading and content. (a) Use context as a clue to meaning. (d) Verify the preliminary determination of the meaning of a word or phrase.",skill:'vocabulary acquisition and word-meaning strategies'},
+  {id:'L.11-12.5',framework:'CCSS',subject:'Language',grade:'11-12',text:"Demonstrate understanding of figurative language, word relationships, and nuances in word meanings. (a) Interpret figures of speech (e.g., hyperbole, paradox) in context and analyze their role in the text.",skill:'figurative language and nuances in word meaning'},
+  {id:'L.11-12.6',framework:'CCSS',subject:'Language',grade:'11-12',text:"Acquire and use accurately general academic and domain-specific words and phrases, sufficient for reading, writing, speaking, and listening at the college and career readiness level.",skill:'academic and domain-specific vocabulary for college and career readiness'},
+  // CCSS MATH HIGH SCHOOL
+  {id:'HSN-Q.1',framework:'CCSS',subject:'Math — Number & Quantity',grade:'HS',text:"Use units as a way to understand problems and to guide the solution of multi-step problems; choose and interpret units consistently in formulas; choose and interpret the scale and the origin in graphs and data displays.",skill:'using units to understand and solve real-world problems'},
+  {id:'HSN-Q.2',framework:'CCSS',subject:'Math — Number & Quantity',grade:'HS',text:"Define appropriate quantities for the purpose of descriptive modeling.",skill:'defining appropriate quantities for modeling real-world situations'},
+  {id:'HSN-Q.3',framework:'CCSS',subject:'Math — Number & Quantity',grade:'HS',text:"Choose a level of accuracy appropriate to limitations on measurement when reporting quantities.",skill:'measurement precision and reporting quantities appropriately'},
+  {id:'HSA-SSE.1',framework:'CCSS',subject:'Math — Algebra',grade:'HS',text:"Interpret expressions that represent a quantity in terms of its context. (a) Interpret parts of an expression, such as terms, factors, and coefficients. (b) Interpret complicated expressions by viewing one or more of their parts as a single entity.",skill:'interpreting algebraic expressions in real-world context'},
+  {id:'HSA-CED.1',framework:'CCSS',subject:'Math — Algebra',grade:'HS',text:"Create equations and inequalities in one variable and use them to solve problems. Include equations arising from linear and quadratic functions, and simple rational and exponential functions.",skill:'creating and solving equations in one variable'},
+  {id:'HSA-CED.2',framework:'CCSS',subject:'Math — Algebra',grade:'HS',text:"Create equations in two or more variables to represent relationships between quantities; graph equations on coordinate axes with labels and scales.",skill:'creating and graphing equations with two variables'},
+  {id:'HSA-REI.3',framework:'CCSS',subject:'Math — Algebra',grade:'HS',text:"Solve linear equations and inequalities in one variable, including equations with coefficients represented by letters.",skill:'solving linear equations and inequalities'},
+  {id:'HSF-IF.1',framework:'CCSS',subject:'Math — Functions',grade:'HS',text:"Understand that a function from one set (called the domain) to another set (called the range) assigns to each element of the domain exactly one element of the range. If f is a function and x is an element of its domain, then f(x) denotes the output of f corresponding to the input x.",skill:'understanding functions and function notation'},
+  {id:'HSF-IF.4',framework:'CCSS',subject:'Math — Functions',grade:'HS',text:"For a function that models a relationship between two quantities, interpret key features of graphs and tables in terms of the quantities, and sketch graphs showing key features given a verbal description of the relationship.",skill:'interpreting key features of graphs and tables in context'},
+  {id:'HSF-LE.1',framework:'CCSS',subject:'Math — Functions',grade:'HS',text:"Distinguish between situations that can be modeled with linear functions and with exponential functions. (a) Prove that linear functions grow by equal differences over equal intervals. (b) Recognize situations in which one quantity changes at a constant rate per unit interval relative to another.",skill:'distinguishing linear from exponential growth models'},
+  {id:'HSS-ID.1',framework:'CCSS',subject:'Math — Statistics',grade:'HS',text:"Represent data with plots on the real number line (dot plots, histograms, and box plots).",skill:'representing data with appropriate visual displays'},
+  {id:'HSS-ID.2',framework:'CCSS',subject:'Math — Statistics',grade:'HS',text:"Use statistics appropriate to the shape of the data distribution to compare center (median, mean) and spread (interquartile range, standard deviation) of two or more different data sets.",skill:'comparing data sets using measures of center and spread'},
+  {id:'HSS-ID.3',framework:'CCSS',subject:'Math — Statistics',grade:'HS',text:"Interpret differences in shape, center, and spread in the context of the data sets, accounting for possible effects of extreme data points (outliers).",skill:'interpreting data distributions and the impact of outliers'},
+  {id:'HSS-ID.7',framework:'CCSS',subject:'Math — Statistics',grade:'HS',text:"Interpret the slope (rate of change) and the intercept (constant term) of a linear model in the context of the data.",skill:'interpreting slope and intercept of a linear model in real-world context'},
+  {id:'HSS-IC.1',framework:'CCSS',subject:'Math — Statistics',grade:'HS',text:"Understand statistics as a process for making inferences about population parameters based on a random sample from that population.",skill:'understanding statistical inference from random samples'},
+  // DLM EEs 11-12 ELA — LITERATURE (verified verbatim Michigan DLM source)
+  {id:'EE.RL.11-12.1',framework:'DLM EE',subject:'Literature (Alternate)',grade:'11-12',text:"Cite textual evidence to determine where the text leaves matters uncertain.",skill:'citing evidence to identify uncertainty in literary text'},
+  {id:'EE.RL.11-12.2',framework:'DLM EE',subject:'Literature (Alternate)',grade:'11-12',text:"Provide a summary of an unfamiliar text.",skill:'summarizing unfamiliar literary text'},
+  {id:'EE.RL.11-12.3',framework:'DLM EE',subject:'Literature (Alternate)',grade:'11-12',text:"Explain how characters develop over the course of a story.",skill:'explaining character development in literary text'},
+  {id:'EE.RL.11-12.4',framework:'DLM EE',subject:'Literature (Alternate)',grade:'11-12',text:"Determine how words or phrases with multiple meanings have an impact on meaning or tone of a text.",skill:'determining impact of multiple-meaning words on tone and meaning'},
+  {id:'EE.RL.11-12.5',framework:'DLM EE',subject:'Literature (Alternate)',grade:'11-12',text:"Determine how the author's choice of where to end the story contributes to the meaning.",skill:"author's structural choices and their contribution to meaning"},
+  {id:'EE.RL.11-12.6',framework:'DLM EE',subject:'Literature (Alternate)',grade:'11-12',text:"Identify the intended meaning to match what an author wrote.",skill:'identifying intended versus stated meaning in literary text'},
+  {id:'EE.RL.11-12.7',framework:'DLM EE',subject:'Literature (Alternate)',grade:'11-12',text:"Compare two or more interpretations (e.g., recorded or live production of a play or recorded novel or poetry) of a story, drama, or poem.",skill:'comparing interpretations of literary works'},
+  {id:'EE.RL.11-12.9',framework:'DLM EE',subject:'Literature (Alternate)',grade:'11-12',text:"Compare and contrast elements of American literature to other literary works, self, or one's world. (Compare themes, topics, locations, context, and point of view.)",skill:'connecting American literary works to other texts, self, and world'},
+  // DLM EEs 11-12 — INFORMATIONAL TEXT
+  {id:'EE.RI.11-12.1',framework:'DLM EE',subject:'Informational Text (Alternate)',grade:'11-12',text:"Cite textual evidence to determine where informational text leaves matters uncertain.",skill:'citing evidence to identify uncertainty in informational text'},
+  {id:'EE.RI.11-12.2',framework:'DLM EE',subject:'Informational Text (Alternate)',grade:'11-12',text:"Provide a summary of an informational text.",skill:'summarizing informational text'},
+  {id:'EE.RI.11-12.3',framework:'DLM EE',subject:'Informational Text (Alternate)',grade:'11-12',text:"Explain how specific events develop over the course of the text.",skill:'explaining sequence and development of events in informational text'},
+  {id:'EE.RI.11-12.4',framework:'DLM EE',subject:'Informational Text (Alternate)',grade:'11-12',text:"Determine the meaning of words or phrases within an informational text.",skill:'determining vocabulary meaning in informational text'},
+  {id:'EE.RI.11-12.6',framework:'DLM EE',subject:'Informational Text (Alternate)',grade:'11-12',text:"Determine how the author's style affects the purpose of the text.",skill:"author's style and its relationship to purpose"},
+  {id:'EE.RI.11-12.8',framework:'DLM EE',subject:'Informational Text (Alternate)',grade:'11-12',text:"Explain how U.S. texts inform citizens' rights.",skill:"understanding citizens' rights from foundational U.S. texts"},
+  {id:'EE.RI.11-12.9',framework:'DLM EE',subject:'Informational Text (Alternate)',grade:'11-12',text:"Determine the purposes of foundational U.S. documents of historical significance.",skill:'identifying purposes of foundational U.S. documents'},
+  // DLM EEs 11-12 — WRITING
+  {id:'EE.W.11-12.1',framework:'DLM EE',subject:'Writing (Alternate)',grade:'11-12',text:"Write to express an opinion with supporting information about a topic or text and a concluding statement.",skill:'opinion writing with supporting information and a conclusion'},
+  {id:'EE.W.11-12.2',framework:'DLM EE',subject:'Writing (Alternate)',grade:'11-12',text:"Write to convey ideas and information using clear organization and including facts, details, and other information as well as graphics and multimedia as needed.",skill:'informational writing with clear organization and supporting details'},
+  {id:'EE.W.11-12.3',framework:'DLM EE',subject:'Writing (Alternate)',grade:'11-12',text:"Select an event or personal experience and write about it. Introduce an experience or situation, at least one character, and describe multiple events in sequence.",skill:'narrative writing based on personal experience with sequential events'},
+  {id:'EE.W.11-12.4',framework:'DLM EE',subject:'Writing (Alternate)',grade:'11-12',text:"Produce writing that is appropriate to a particular task, purpose, and audience.",skill:'producing writing appropriate to task, purpose, and audience'},
+  {id:'EE.W.11-12.5',framework:'DLM EE',subject:'Writing (Alternate)',grade:'11-12',text:"Develop and strengthen writing as needed by planning, revising, editing, and rewriting.",skill:'planning, revising, and editing writing'},
+  {id:'EE.W.11-12.10',framework:'DLM EE',subject:'Writing (Alternate)',grade:'11-12',text:"Write routinely over extended time frames (time for research, reflection, and revision) for a range of tasks, purposes, and audiences.",skill:'writing routinely across tasks and purposes'},
+  // DLM EEs 11-12 — SPEAKING & LISTENING
+  {id:'EE.SL.11-12.1',framework:'DLM EE',subject:'Speaking & Listening (Alternate)',grade:'11-12',text:"Initiate and participate in collaborative discussions. (a) Prepare for discussions by collecting information on the topic. (b) Work with peers to set rules, goals, and deadlines. (c) Ask and answer questions to verify or clarify own ideas. (d) Restate comments or claims made by others.",skill:'initiating and participating in structured collaborative discussions'},
+  {id:'EE.SL.11-12.4',framework:'DLM EE',subject:'Speaking & Listening (Alternate)',grade:'11-12',text:"Present information and findings as well as alternative or opposing information, with an organization that is appropriate to the purpose, audience, and task.",skill:'presenting information and findings with appropriate organization'},
+  {id:'EE.SL.11-12.6',framework:'DLM EE',subject:'Speaking & Listening (Alternate)',grade:'11-12',text:"Adapt communication to a variety of contexts and tasks using complete sentences when indicated or appropriate.",skill:'adapting communication to formal and informal contexts'},
+  // DLM EEs 11-12 — LANGUAGE
+  {id:'EE.L.11-12.1',framework:'DLM EE',subject:'Language (Alternate)',grade:'11-12',text:"Demonstrate command of the conventions of standard English grammar and usage when writing or speaking. (a) Apply understandings that conventions are required in some communication contexts but not others. (b) Use appropriate resources to resolve grammar usage, punctuation, and spelling issues.",skill:'standard English grammar and usage conventions'},
+  {id:'EE.L.11-12.4',framework:'DLM EE',subject:'Language (Alternate)',grade:'11-12',text:"Demonstrate knowledge of the meaning of words and phrases drawn from reading and academic content. (a) Use context to determine the meaning of unknown words. (d) Consult reference materials to clarify the meaning of unfamiliar words encountered when reading.",skill:'vocabulary acquisition using context clues and reference materials'},
+  {id:'EE.L.11-12.6',framework:'DLM EE',subject:'Language (Alternate)',grade:'11-12',text:"Use academic and domain-specific words and phrases for communication appropriate for the student's educational plans and career goals.",skill:'academic and career-relevant vocabulary in communication'},
+  // DLM EEs HS MATH (verified verbatim Michigan DLM Math HS source)
+  {id:'EE.N-Q.1-3',framework:'DLM EE',subject:'Math — Number & Quantity (Alternate)',grade:'HS',text:"Express quantities to the appropriate precision of measurement.",skill:'expressing and interpreting quantities with appropriate precision'},
+  {id:'EE.N-CN.2',framework:'DLM EE',subject:'Math — Number & Quantity (Alternate)',grade:'HS',text:"Use the operations of addition, subtraction, and multiplication with decimals (decimal value x whole number) in real world situations using money as the standard units ($20, $10, $5, $1, $0.25, $0.10, $0.05, and $0.01).",skill:'addition, subtraction, and multiplication with money in real-world situations'},
+  {id:'EE.A-SSE.1',framework:'DLM EE',subject:'Math — Algebra (Alternate)',grade:'HS',text:"Match an algebraic expression involving one operation to represent a given word expression with an illustration.",skill:'matching algebraic expressions to word problems and illustrations'},
+  {id:'EE.A-SSE.3',framework:'DLM EE',subject:'Math — Algebra (Alternate)',grade:'HS',text:"Solve simple one-step equations (multiplication and division) with a variable.",skill:'solving one-step equations with multiplication and division'},
+  {id:'EE.A-SSE.4',framework:'DLM EE',subject:'Math — Algebra (Alternate)',grade:'HS',text:"Identify the missing part in any other equivalent ratio when given any ratio.",skill:'identifying missing parts in equivalent ratios'},
+  {id:'EE.A-CED.1',framework:'DLM EE',subject:'Math — Algebra (Alternate)',grade:'HS',text:"Solve an algebraic expression using subtraction.",skill:'solving algebraic expressions using subtraction in real-world contexts'},
+  {id:'EE.A-CED.2-4',framework:'DLM EE',subject:'Math — Algebra (Alternate)',grade:'HS',text:"Solve one-step inequalities.",skill:'solving one-step inequalities in real-world problem contexts'},
+  {id:'EE.A-REI.10-12',framework:'DLM EE',subject:'Math — Algebra (Alternate)',grade:'HS',text:"Determine the two pieces of information that are plotted on a graph of an equation with two variables that form a line when plotted.",skill:'reading and interpreting two-variable graphs in context'},
+  {id:'EE.F-IF.1-3',framework:'DLM EE',subject:'Math — Functions (Alternate)',grade:'HS',text:"Use the concept of function to solve problems.",skill:'using functions and input-output relationships to solve real-world problems'},
+  {id:'EE.F-IF.4-6',framework:'DLM EE',subject:'Math — Functions (Alternate)',grade:'HS',text:"Interpret rate of change (e.g., higher/lower, faster/slower).",skill:'interpreting rate of change from graphs and tables'},
+  {id:'EE.F-BF.2',framework:'DLM EE',subject:'Math — Functions (Alternate)',grade:'HS',text:"Build an arithmetic sequence when provided a recursive rule with whole numbers.",skill:'building arithmetic sequences using recursive rules'},
+  {id:'EE.F-LE.1',framework:'DLM EE',subject:'Math — Functions (Alternate)',grade:'HS',text:"Model a simple linear function such as y=mx to show functions grow by equal factors over equal intervals.",skill:'modeling simple linear functions and equal-interval growth'},
+  {id:'EE.S-IC.1-2',framework:'DLM EE',subject:'Math — Statistics (Alternate)',grade:'HS',text:"Determine the likelihood of an event occurring when the outcomes are equally likely to occur.",skill:'determining likelihood of equally likely events'},
+  // ILLINOIS SEL (verified verbatim ISBE framework)
+  {id:'IL-SEL-1A',framework:'IL SEL',subject:'Self-Management',grade:'All Grades',text:"Identify and manage one's emotions and behavior. [Late HS benchmark: evaluate how expressing emotions in different situations affects others.]",skill:'emotional identification and self-regulation'},
+  {id:'IL-SEL-1B',framework:'IL SEL',subject:'Self-Awareness',grade:'All Grades',text:"Recognize personal qualities and external supports. [Late HS benchmark: evaluate how developing interests and filling useful roles support school and life success.]",skill:'recognizing personal strengths, interests, and available supports'},
+  {id:'IL-SEL-1C',framework:'IL SEL',subject:'Goal Achievement',grade:'All Grades',text:"Demonstrate skills related to achieving personal and academic goals. [Late HS benchmark: set a postsecondary goal with action steps, timeframes, and criteria for evaluating achievement.]",skill:'setting and monitoring progress toward personal and academic goals'},
+  {id:'IL-SEL-2A',framework:'IL SEL',subject:'Perspective-Taking',grade:'All Grades',text:"Recognize the feelings and perspectives of others. [Late HS benchmark: demonstrate understanding of those who hold different opinions; demonstrate ways to express empathy for others.]",skill:'recognizing feelings and perspectives of others; empathy'},
+  {id:'IL-SEL-2B',framework:'IL SEL',subject:'Social Awareness',grade:'All Grades',text:"Recognize individual and group similarities and differences. [Late HS benchmark: evaluate strategies for being respectful of others and opposing stereotyping and prejudice.]",skill:'recognizing individual and group similarities and differences'},
+  {id:'IL-SEL-2C',framework:'IL SEL',subject:'Interpersonal Skills',grade:'All Grades',text:"Use communication and social skills to interact effectively with others. [Late HS benchmark: evaluate the application of communication and social skills in daily interactions with peers, teachers, and families.]",skill:'communication and social skills for effective interaction'},
+  {id:'IL-SEL-2D',framework:'IL SEL',subject:'Conflict Resolution',grade:'All Grades',text:"Demonstrate an ability to prevent, manage, and resolve interpersonal conflicts in constructive ways. [Late HS benchmark: evaluate the effects of using negotiation skills to reach win-win solutions.]",skill:'conflict prevention, management, and constructive resolution'},
+  {id:'IL-SEL-3A',framework:'IL SEL',subject:'Responsible Decision-Making',grade:'All Grades',text:"Consider ethical, safety, and societal factors in making decisions. [Late HS benchmark: apply ethical reasoning to evaluate societal practices and demonstrate personal responsibility in making ethical decisions.]",skill:'ethical, safe, and responsible decision-making'},
+  {id:'IL-SEL-3B',framework:'IL SEL',subject:'Decision-Making Skills',grade:'All Grades',text:"Apply decision-making skills to deal responsibly with daily academic and social situations. [Late HS benchmark: analyze how present decision making affects college and career choices.]",skill:'applying systematic decision-making to academic and social situations'},
+  {id:'IL-SEL-3C',framework:'IL SEL',subject:'Community Contribution',grade:'All Grades',text:"Contribute to the well-being of one's school and community. [Late HS benchmark: work cooperatively with others to plan, implement, and evaluate a project that addresses an identified need in the broader community.]",skill:'contributing to school and community well-being through collaborative action'},
+  // IDEA TRANSITION (synthesized — NOT verbatim federal code)
+  {id:'IDEA-PS-1',framework:'IDEA Transition ⓘ',subject:'Postsecondary Education',grade:'Transition',text:"Identify 2-3 postsecondary education or training options (e.g., community college, vocational program, supported employment training site) that align with the student's stated interests and strengths. [Synthesized from IDEA Postsecondary Education domain.]",skill:'identifying postsecondary education and training options aligned to strengths'},
+  {id:'IDEA-PS-4',framework:'IDEA Transition ⓘ',subject:'Postsecondary Education',grade:'Transition',text:"Articulate one's disability, strengths, and needed accommodations to a new service provider or employer (self-disclosure and self-advocacy). [Synthesized from IDEA Postsecondary Education domain.]",skill:'self-disclosure and self-advocacy in postsecondary and employment settings'},
+  {id:'IDEA-PS-5',framework:'IDEA Transition ⓘ',subject:'Postsecondary Education',grade:'Transition',text:"Complete functional literacy tasks required for postsecondary access: reading forms, signing documents, and completing digital applications. [Synthesized from IDEA Postsecondary Education domain.]",skill:'functional literacy for postsecondary access and enrollment'},
+  {id:'IDEA-EMP-1',framework:'IDEA Transition ⓘ',subject:'Employment',grade:'Transition',text:"Identify at least 2 jobs or career paths that match the student's interests, strengths, and functional abilities. [Synthesized from IDEA Employment domain.]",skill:'career exploration and identifying job matches based on strengths and interests'},
+  {id:'IDEA-EMP-3',framework:'IDEA Transition ⓘ',subject:'Employment',grade:'Transition',text:"Demonstrate job-task completion by following a visual task analysis for a work routine in a target vocational area independently from start to finish. [Synthesized from IDEA Employment domain.]",skill:'completing vocational tasks using visual task analysis'},
+  {id:'IDEA-EMP-4',framework:'IDEA Transition ⓘ',subject:'Employment',grade:'Transition',text:"Use appropriate workplace communication skills: greeting coworkers, requesting assistance, and reporting task completion. [Synthesized from IDEA Employment domain.]",skill:'workplace communication and professional interaction skills'},
+  {id:'IDEA-EMP-5',framework:'IDEA Transition ⓘ',subject:'Employment',grade:'Transition',text:"Demonstrate workplace safety and conduct, including following rules, using safety equipment, and responding appropriately to supervisor direction. [Synthesized from IDEA Employment domain.]",skill:'workplace safety, conduct, and responding to supervision'},
+  {id:'IDEA-EMP-7',framework:'IDEA Transition ⓘ',subject:'Employment',grade:'Transition',text:"Identify and use supported employment resources, including job coaches, DRS/VR contacts, and workplace natural supports. [Synthesized from IDEA Employment domain.]",skill:'accessing supported employment resources and natural workplace supports'},
+  {id:'IDEA-IL-1',framework:'IDEA Transition ⓘ',subject:'Independent Living',grade:'Transition',text:"Manage personal hygiene and grooming routines using a visual self-care checklist, independently or with identified supports. [Synthesized from IDEA Independent Living domain.]",skill:'personal hygiene and grooming as independent living skills'},
+  {id:'IDEA-IL-2',framework:'IDEA Transition ⓘ',subject:'Independent Living',grade:'Transition',text:"Prepare simple meals or snacks following a visual recipe or step-by-step food preparation guide. [Synthesized from IDEA Independent Living domain.]",skill:'meal preparation and food safety as independent living skills'},
+  {id:'IDEA-IL-3',framework:'IDEA Transition ⓘ',subject:'Independent Living',grade:'Transition',text:"Manage basic money skills including identifying coins and bills, making purchases, using a debit card, and budgeting for a simple purchase in a community setting. [Synthesized from IDEA Independent Living domain.]",skill:'functional money management and community purchasing skills'},
+  {id:'IDEA-IL-4',framework:'IDEA Transition ⓘ',subject:'Independent Living',grade:'Transition',text:"Navigate community transportation (bus, rideshare, or paratransit) safely and independently or with identified natural supports. [Synthesized from IDEA Independent Living domain.]",skill:'community transportation navigation and mobility skills'},
+  {id:'IDEA-IL-5',framework:'IDEA Transition ⓘ',subject:'Independent Living',grade:'Transition',text:"Use a mobile device or technology tool to manage daily living tasks: scheduling, communicating, and accessing information. [Synthesized from IDEA Independent Living domain.]",skill:'using technology tools to manage daily living tasks'},
+  {id:'IDEA-IL-8',framework:'IDEA Transition ⓘ',subject:'Community Safety',grade:'Transition',text:"Demonstrate community participation skills including using public spaces, identifying and responding to community safety signs, and engaging with community resources. [Synthesized from IDEA Independent Living domain.]",skill:'community participation, safety awareness, and resource engagement'},
+  {id:'IDEA-SD-1',framework:'IDEA Transition ⓘ',subject:'Self-Determination',grade:'Transition',text:"Identify personal strengths, interests, learning preferences, and disability-related needs. [Synthesized from IDEA Self-Determination cross-cutting domain.]",skill:'self-knowledge including strengths, interests, and disability-related needs'},
+  {id:'IDEA-SD-2',framework:'IDEA Transition ⓘ',subject:'Self-Determination',grade:'Transition',text:"Participate meaningfully in one's own IEP meeting, stating goals, preferences, and needed supports. [Synthesized from IDEA Self-Determination cross-cutting domain.]",skill:'meaningful IEP participation and self-directed goal-setting'},
+  {id:'IDEA-SD-4',framework:'IDEA Transition ⓘ',subject:'Self-Determination',grade:'Transition',text:"Set a short-term goal, identify the steps needed to reach it, and monitor progress toward that goal using a self-monitoring system. [Synthesized from IDEA Self-Determination cross-cutting domain.]",skill:'goal setting, action planning, and self-monitoring progress'},
+  {id:'IDEA-SD-5',framework:'IDEA Transition ⓘ',subject:'Self-Advocacy',grade:'Transition',text:"Practice self-advocacy by asking for accommodations, clarifying expectations, and communicating needs, preferences, or requests for assistance to trusted adults and peers in various settings. [Synthesized from IDEA Self-Determination cross-cutting domain.]",skill:'self-advocacy and requesting accommodations across settings'},
+];
+
+/* ── RESPONSE MODES ─────────────────────────────────────────────────────── */
+const responseModes = [
+  {level:1,name:'Verbal Generation',support:'Least Supported',icon:MessageSquare,bg:'bg-blue-50',border:'border-blue-400',text:'text-blue-800',badge:'bg-blue-600',
+    description:'Student generates a verbal answer or selects from text-based options. Requires functional speech or AAC phrase-level output.',
+    dataNote:'Record student output verbatim or score correct/incorrect. Do not substitute pointing data for verbal generation data.',
+    goalResponse:'verbally stating the answer or selecting from written answer choices'},
+  {level:2,name:'Pointing to Response Board',support:'Minimally Supported',icon:MousePointer,bg:'bg-emerald-50',border:'border-emerald-400',text:'text-emerald-800',badge:'bg-emerald-600',
+    description:'Student points to one of several picture/text options on a response board.',
+    dataNote:'Record which option the student pointed to. Confirm pointing is an established skill before using this as the primary response mode.',
+    goalResponse:'pointing to the correct option on a picture-symbol response board'},
+  {level:3,name:'Pulling from Velcro Board',support:'Moderately Supported',icon:Hand,bg:'bg-amber-50',border:'border-amber-400',text:'text-amber-800',badge:'bg-amber-600',
+    description:'Student selects a response by physically pulling it off a Velcro response board.',
+    dataNote:'Record which card the student removed. Velcro pull and pointing are distinct motor responses — data from one cannot substitute for the other.',
+    goalResponse:'selecting the correct response card from a Velcro response board'},
+  {level:4,name:'Eye-Gaze to Plexiglas Board',support:'Significantly Supported',icon:Eye,bg:'bg-orange-50',border:'border-orange-400',text:'text-orange-800',badge:'bg-orange-600',
+    description:"Student holds their gaze on a selection affixed to a Plexiglas window. Chapter 3 specifies that the student may need explicit instruction in sustaining gaze for several seconds.",
+    dataNote:'Record gaze direction and duration. Begin with the correct response highlighted; fade this support once the student demonstrates reliable focus.',
+    goalResponse:'eye-gazing to the correct response on a Plexiglas communication board'},
+  {level:5,name:'Switch Activation',support:'Most Supported',icon:Zap,bg:'bg-purple-50',border:'border-purple-400',text:'text-purple-800',badge:'bg-purple-600',
+    description:'Student activates a single-message or multi-message switch to participate. Appropriate for students with very limited motor control.',
+    dataNote:'Record each activation and context. Distinguish intentional activations from incidental contact. Document whether the student activates within the expected latency window.',
+    goalResponse:'activating a programmed switch to indicate understanding or participation'},
+];
+
+/* ── SD COMPONENTS ──────────────────────────────────────────────────────── */
+const sdComponents = [
+  {id:'choice-making',name:'Choice Making',bg:'bg-indigo-50',border:'border-indigo-400',text:'text-indigo-800',
+    description:'Making choices within an activity or between two or more activities.',
+    chapterExample:"Walter chooses which ethnic group's sounds to listen to based on his preference for specific objects.",
+    goalExpansion:'choosing between two or three provided options to direct their engagement with the lesson content',expansionLabel:'Choice-Making Focus'},
+  {id:'decision-making',name:'Decision Making',bg:'bg-violet-50',border:'border-violet-400',text:'text-violet-800',
+    description:'Deciding the topic for a class project or the best resource to gather information.',
+    chapterExample:'Walter independently selects the final 10 digital photos for his heritage class presentation.',
+    goalExpansion:'determining which materials or approach to use when engaging with the standard content',expansionLabel:'Decision-Making Focus'},
+  {id:'problem-solving',name:'Problem Solving',bg:'bg-cyan-50',border:'border-cyan-400',text:'text-cyan-800',
+    description:"Determining how to solve one's own problem, or how a character might solve a problem in a story.",
+    chapterExample:'Student identifies a problem within the instructional content and selects from provided solution options.',
+    goalExpansion:'identifying a problem within the standard context and selecting a solution from provided options',expansionLabel:'Problem-Solving Focus'},
+  {id:'goal-setting',name:'Goal Setting',bg:'bg-emerald-50',border:'border-emerald-400',text:'text-emerald-800',
+    description:'Setting a goal for how many items to complete, turns to take, or books to read.',
+    chapterExample:'Walter sets a goal for the number of turns he will take in his cooperative learning group for 4 out of 5 days.',
+    goalExpansion:'setting a self-selected participation goal at the start of each session and rating whether they met it at the end',expansionLabel:'Goal-Setting Focus'},
+  {id:'self-management',name:'Self-Management / Self-Evaluation',bg:'bg-teal-50',border:'border-teal-400',text:'text-teal-800',
+    description:"Using a bar graph to chart progress, or rating one's own performance on a skill, assignment, or lesson.",
+    chapterExample:"Roxanne increases her sight word vocabulary to 50 words including words she uses to evaluate her daily work: 'excellent,' 'okay,' 'not my best.'",
+    goalExpansion:'self-monitoring performance using a visual progress chart and independently rating their work at the conclusion of each session',expansionLabel:'Self-Management Focus'},
+  {id:'self-awareness',name:'Self-Awareness',bg:'bg-rose-50',border:'border-rose-400',text:'text-rose-800',
+    description:'Listing likes and dislikes, identifying strengths and challenges, developing a self-description.',
+    chapterExample:'Sam uses a picture/word journal to write characteristics of 3 potential future jobs based on personal likes and dislikes.',
+    goalExpansion:'connecting the standard content to their own interests, preferences, or personal history to develop self-knowledge alongside the academic skill',expansionLabel:'Self-Awareness Focus'},
+];
+
+/* ── AT DEVICES ─────────────────────────────────────────────────────────── */
+const atDevicesBySubject = {
+  ELA:[
+    {id:'gotalk-now-ela',name:'GoTalk NOW App (iPad)',goalText:'the GoTalk NOW app on iPad',settings:['School','Home','Work','Community'],chapter3Note:'Chapter 3: Converts the iPad into a full-featured AAC device. Can be programmed with story characters, main idea, events, and vocabulary for any ELA unit.'},
+    {id:'bigmack',name:'BIGmack Communicator',goalText:'a BIGmack Communicator programmed with the repeated story line',settings:['School'],chapter3Note:'Chapter 3: Perfect for reading repeated story lines in a storybook or filling in blanks with one-word responses.'},
+    {id:'start-to-finish',name:'Start-to-Finish Library (adapted novels)',goalText:'a Start-to-Finish Library adapted novel accessed with AT',settings:['School','Home'],chapter3Note:'Chapter 3: Age-appropriate narrative chapter books written at two readability levels, available for students to read online.'},
+    {id:'pixwriter',name:'PixWriter (picture-assisted writing)',goalText:'PixWriter picture-assisted writing software with teacher-created word/picture banks',settings:['School'],chapter3Note:'Chapter 3: Allows students to engage in writing using teacher-created word and picture banks.'},
+    {id:'cowriter',name:'Co:Writer 7 (word prediction)',goalText:'Co:Writer 7 word prediction software',settings:['School'],chapter3Note:'Chapter 3: Can be added to any word processor; provides grammar and vocabulary support.'},
+    {id:'response-board-ela',name:'Picture Symbol Response Board',goalText:'a picture-symbol response board with content-specific icons',settings:['School','Home','Community'],chapter3Note:'Chapter 3: Printed with consistent picture symbols for characters, settings, main idea, and vocabulary.'},
+  ],
+  Math:[
+    {id:'manipulatives-organizer',name:'Manipulatives + Equation Graphic Organizer',goalText:'concrete manipulatives and an equation prompt graphic organizer',settings:['School'],chapter3Note:'Chapter 3: Figure 3.14 — Equation Prompt Graphic Organizer used with objects to solve story-based math problems.'},
+    {id:'set-maker',name:'Set Maker Graphic Organizer',goalText:'the Set Maker graphic organizer with physical manipulatives',settings:['School'],chapter3Note:'Chapter 3: Figure 3.15 — Theme-related objects and graphic organizer used to help students create and combine sets.'},
+    {id:'gotalk-math',name:'GoTalk NOW App (numbers/equations)',goalText:'the GoTalk NOW app preprogrammed with numerals and math operation symbols',settings:['School','Home','Community'],chapter3Note:'Chapter 3: Josie used the GoTalk NOW iPad app to count and solve algebra problems in her 6th-grade math class.'},
+    {id:'mathpad',name:'MathPad App',goalText:'the MathPad accessible mathematics app',settings:['School'],chapter3Note:'Chapter 3: Serves as an accessible tool for students to perform mathematics directly on a device.'},
+    {id:'show-me-math',name:'Show Me Math App (iPad)',goalText:'the Show Me Math iPad app',settings:['School','Home'],chapter3Note:'Chapter 3: Helps students practice addition, subtraction, multiplication, and division.'},
+  ],
+  Transition:[
+    {id:'gotalk-community',name:'GoTalk NOW App (community/work settings)',goalText:'the GoTalk NOW app for use across community and work settings',settings:['School','Home','Work','Community'],chapter3Note:'Chapter 3: GoTalk NOW can be used across settings — home, school, work, and community — to enhance communication opportunities.'},
+    {id:'visual-task-analysis',name:'Visual Task Analysis Schedule',goalText:'a visual task analysis schedule',settings:['School','Home','Work','Community'],chapter3Note:'Chapter 3: Visual schedules and task analyses are documented across multiple student scenarios for vocational and daily living tasks.'},
+    {id:'community-success',name:'Community Success App',goalText:'the Community Success app with video modeling and photo-based directions',settings:['School','Community'],chapter3Note:'Chapter 3: Incorporates video modeling, photo-based directions, and narrated short stories for community activities.'},
+  ],
+  General:[
+    {id:'ipad-tts',name:'iPad with Text-to-Speech',goalText:'an iPad with text-to-speech and digitally adapted materials',settings:['School','Home'],chapter3Note:'Chapter 3: iPads and other tablets are touchscreen activated, allowing many new opportunities for using apps to target academic content.'},
+    {id:'aac-gotalk9',name:'GoTalk 9+ AAC Device',goalText:'a GoTalk 9+ AAC device preprogrammed with content-specific vocabulary',settings:['School','Home','Community'],chapter3Note:'Chapter 3: Figure 3.2 — GoTalk 9+ programmed with pictures and speech to give students an option for responding during any academic lesson.'},
+    {id:'adapted-text',name:'Adapted Text (picture cues + repeated story line)',goalText:'adapted text materials with picture cues and a repeated story line',settings:['School'],chapter3Note:'Chapter 3: Shortened/rewritten text with picture symbols for characters, embedded definitions, and a repeated summary line on each page.'},
+  ],
+};
+
+/* ── BOOK ADAPTATION CHECKLIST ──────────────────────────────────────────── */
+const bookAdaptItems = [
+  {id:'grade-appropriate',label:"Literature selected is grade-appropriate for the student's assigned grade level (not a lower-grade substitute)."},
+  {id:'objects-gathered',label:'Real objects related to the text theme gathered — provided to early symbol users to hold or examine while the text is read aloud.'},
+  {id:'considerate-text',label:"Text shortened/rewritten using considerate text — rewritten to enhance listening comprehension, not merely simplified vocabulary."},
+  {id:'picture-symbols',label:'Picture symbols added for main characters, key places, and themes throughout the adapted text.'},
+  {id:'consistent-pictures',label:'The same pictures used consistently across the adapted text AND all comprehension questions (not different images for the same concept).'},
+  {id:'definitions-embedded',label:'Definitions and explanations embedded directly in the text (e.g., "...assemble, which means to get together...").'},
+  {id:'repeated-story-line',label:'Repeated story line added to each page — a single line all students can read verbally or by activating their AAC device.'},
+  {id:'vocabulary-highlighted',label:'Target vocabulary or target text highlighted throughout — words the teacher wants the student to read or notice.'},
+  {id:'physical-alterations',label:'Physical alterations made as needed: pages in sheet protectors, page separators to make turning easier for students with motor challenges.'},
+];
+
+/* ── DATA COLLECTION METHODS ─────────────────────────────────────────────── */
+const dataCollectionMethods = [
+  {id:'observation',name:'Observation / Frequency Recording',icon:BarChart2,bg:'bg-slate-50',border:'border-slate-400',text:'text-slate-800',
+    description:'Teacher observes and tallies correct/incorrect responses in real time. Best for discrete, observable behaviors with clear outcomes.',
+    goalMeasure:'in 4 out of 5 observed opportunities by [Date]',badge:'4 / 5 opportunities'},
+  {id:'permanent-product',name:'Permanent Product',icon:CheckSquare,bg:'bg-indigo-50',border:'border-indigo-400',text:'text-indigo-800',
+    description:'Completed work samples, photographs of student responses, or printed outputs reviewed after the session.',
+    goalMeasure:'as documented by work samples collected across 5 consecutive sessions by [Date]',badge:'Permanent product / 5 sessions'},
+  {id:'probe-data',name:'Probe Data (Discrete Trial)',icon:Target,bg:'bg-emerald-50',border:'border-emerald-400',text:'text-emerald-800',
+    description:'Systematic presentation of the same task across multiple trials; each trial scored correct or incorrect.',
+    goalMeasure:'with 80% accuracy across 10 consecutive probe trials by [Date]',badge:'80% / 10 probe trials'},
+  {id:'task-analysis',name:'Task Analysis',icon:Layers,bg:'bg-amber-50',border:'border-amber-400',text:'text-amber-800',
+    description:'A multi-step task broken into component steps; each step scored independently.',
+    goalMeasure:'completing 80% of task analysis steps independently across 3 consecutive sessions by [Date]',badge:'80% steps / 3 sessions'},
+  {id:'portfolio',name:'Portfolio / Collected Work Samples',icon:BookOpen,bg:'bg-rose-50',border:'border-rose-400',text:'text-rose-800',
+    description:'Evidence of student performance collected across multiple weeks. Best for writing, research, or project-based standards.',
+    goalMeasure:'as evidenced by portfolio samples collected monthly across the IEP year, demonstrating consistent progress toward [Date]',badge:'Monthly portfolio samples'},
+];
+
+/* ── SYMBOL PROFILES ─────────────────────────────────────────────────────── */
+const symbolProfiles = {
+  beginning:{id:'beginning',title:'Beginning Symbol User',accent:'bg-purple-600',border:'border-purple-500',text:'text-purple-800',bg:'bg-purple-50',icon:Activity,
+    profile:'Relies on nonsymbolic communication: sounds, movement, facial expressions. Minimal print awareness. Has not yet acquired the skills to discriminate among pictures or symbols.',
+    materials:'Tactile objects of reference that directly correspond to the instructional unit — physical items the student can hold or examine while content is presented. Switch-accessible audio snippets.',
+    adaptation:'Focus on sensory interaction with the core concept of the standard rather than traditional reading or abstract computation.',
+    subjectMaterials:{ELA:'Gather real objects related to the text theme (e.g., for Tyrell: coins, a basketball, a small notebook). The student holds objects during read-aloud.',Math:'Use concrete counting objects the student can physically manipulate — blocks, tiles, or themed items tied to the math story problem.',Transition:'Use the actual items from the vocational or daily living task the student will perform — real workplace materials, actual coins, real food items.',General:'Use tactile objects of reference drawn from the lesson theme for sensory engagement during instruction.'}},
+  concrete:{id:'concrete',title:'Concrete Symbol User',accent:'bg-emerald-600',border:'border-emerald-500',text:'text-emerald-800',bg:'bg-emerald-50',icon:Users,
+    profile:'Discriminates between photographs and drawings. Has early literacy and numeracy skills. Communicates via picture exchange or verbal approximations.',
+    materials:'Considerate materials: text shortened and rewritten to enhance listening comprehension (not just simplified vocabulary). Printed response boards with consistent picture symbols.',
+    adaptation:'Embed a repeated story line onto every page or task step. Pair all key vocabulary with consistent visual icons used identically across adapted text and all comprehension response options.',
+    subjectMaterials:{ELA:'Shortened, rewritten text with picture symbols for characters, settings, and themes. Response board with same pictures used in text. Repeated story line on each page.',Math:'Picture-embedded math story problem text. Equation prompt graphic organizer. Concrete objects for each set in the problem.',Transition:'Visual task analysis with photos of each step. Response board with community signs, money amounts, or workplace vocabulary.',General:'Visually-supported adapted materials with consistent picture symbols across all lesson components.'}},
+  abstract:{id:'abstract',title:'Abstract Symbol User',accent:'bg-blue-600',border:'border-blue-500',text:'text-blue-800',bg:'bg-blue-50',icon:BookOpen,
+    profile:'Extensive sight word vocabulary and functional reading skills. May struggle with complex syntax or sustained attention without structural supports.',
+    materials:'Digitally adapted materials, graphic organizers, checklists. Text-to-speech software. Highlighters or digital annotation tools. Definitions embedded directly in the text.',
+    adaptation:'Embed definitions within the text. Break the standard into structured segments. Highlight target vocabulary. Self-monitoring chart to track progress through each section.',
+    subjectMaterials:{ELA:'Adapted text with highlighted target vocabulary and embedded definitions. Graphic organizer for text structure. Sentence frames for written or verbal responses.',Math:'Word prediction or text-to-speech for math story problems. Graphic organizer for equation structure. Self-monitoring checklist for multi-step procedures.',Transition:'Written task checklist with completion boxes. Visual schedule with reading-level text. Self-monitoring rubric for vocational task performance.',General:'Digitally adapted materials with highlighted vocabulary, embedded definitions, and graphic organizers.'}},
+};
+
+/* ── HELPERS ─────────────────────────────────────────────────────────────── */
+const frameworkColors = {'CCSS':'bg-indigo-100 text-indigo-800 border-indigo-300','DLM EE':'bg-teal-100 text-teal-800 border-teal-300','IL SEL':'bg-emerald-100 text-emerald-800 border-emerald-300','IDEA Transition ⓘ':'bg-amber-100 text-amber-800 border-amber-300'};
+
+const formatSubjectText = std => {
+  if (!std) return 'grade-level';
+  if (std.grade === 'Transition') return `transition-level ${std.subject}`;
+  if (std.grade === 'All Grades') return std.subject;
+  const prefix = std.grade.includes('-') ? `Grades ${std.grade}` : `Grade ${std.grade}`;
+  return `${prefix} ${std.subject}`;
+};
+
+const detectSubjectCategory = std => {
+  if (!std) return 'General';
+  const s = std.subject.toLowerCase(), id = std.id.toLowerCase();
+  if (s.includes('literature')||s.includes('reading')||s.includes('writing')||s.includes('informational')||s.includes('speaking')||s.includes('language')||id.startsWith('rl')||id.startsWith('ri')||id.startsWith('w.')||id.startsWith('sl')||id.startsWith('l.')||id.startsWith('ee.r')||id.startsWith('ee.w')||id.startsWith('ee.s')||id.startsWith('ee.l')) return 'ELA';
+  if (s.includes('math')||id.includes('n-q')||id.includes('n-cn')||id.includes('a-ss')||id.includes('a-ce')||id.includes('a-re')||id.includes('f-if')||id.includes('f-bf')||id.includes('f-le')||id.includes('s-id')||id.includes('s-ic')||id.startsWith('ee.n')||id.startsWith('ee.a')||id.startsWith('ee.f')||id.startsWith('ee.s')||id.startsWith('hs')) return 'Math';
+  if (std.grade==='Transition'||s.includes('living')||s.includes('vocational')||s.includes('community')||s.includes('advocacy')||s.includes('employment')||s.includes('postsecondary')||id.startsWith('idea')) return 'Transition';
+  return 'General';
+};
+
+const generateGoal = (std, levelId, at, rm, sd, dm) => {
+  const subject = formatSubjectText(std);
+  const atText   = at ? at.goalText : 'adapted materials and assistive technology';
+  const respText = rm ? rm.goalResponse : 'using an appropriate response mode';
+  const dataText = dm ? dm.goalMeasure : 'in 4 out of 5 opportunities by [Date]';
+  const skill    = std ? std.skill : 'the target concept';
+  const sdClause = sd ? `, while ${sd.goalExpansion},` : '';
+  if (levelId==='beginning') return `Using ${atText} and tactile objects of reference corresponding to the ${subject} unit${sdClause} [Student Name] will actively participate in exploring ${skill} by ${respText} ${dataText}.`;
+  if (levelId==='concrete')  return `Using ${atText} and adapted, visually-supported ${subject} materials${sdClause} [Student Name] will independently demonstrate understanding of ${skill} by ${respText} ${dataText}.`;
+  return `Using ${atText} and structurally adapted ${subject} materials with embedded prompts and definitions${sdClause} [Student Name] will independently apply skills regarding ${skill} by ${respText} ${dataText}.`;
+};
+
+/* ── SETTING BADGE COLOR ─────────────────────────────────────────────────── */
+const settingBadgeClass = s => s==='Community'?'bg-teal-100 text-teal-800':s==='Work'?'bg-orange-100 text-orange-800':s==='Home'?'bg-indigo-100 text-indigo-800':'bg-slate-200 text-slate-700';
+
+/* ── MAIN APP ────────────────────────────────────────────────────────────── */
+function App() {
+  const [activeTab, setActiveTab]       = useState('concrete');
+  const [searchTerm, setSearchTerm]     = useState('');
+  const [dropOpen, setDropOpen]         = useState(false);
+  const [selectedStd, setSelectedStd]   = useState(null);
+  const [focusIdx, setFocusIdx]         = useState(-1);
+  const [selSD, setSelSD]               = useState(null);
+  const [selRM, setSelRM]               = useState(null);
+  const [selAT, setSelAT]               = useState(null);
+  const [selDM, setSelDM]               = useState(null);
+  const [showCompare, setShowCompare]   = useState(false);
+  const [checklist, setChecklist]       = useState({});
+  const [showCL, setShowCL]             = useState(true);
+
+  const searchRef  = useRef(null);
+  const dropRef    = useRef(null);
+  const inputRef   = useRef(null);
+
+  const cur        = symbolProfiles[activeTab];
+  const subjectCat = detectSubjectCategory(selectedStd);
+  const isELA      = subjectCat === 'ELA';
+  const availAT    = useMemo(() => [...(atDevicesBySubject[subjectCat]||[]),...atDevicesBySubject.General],[subjectCat]);
+  const goal       = generateGoal(selectedStd,activeTab,selAT,selRM,selSD,selDM);
+  const baseGoal   = generateGoal(selectedStd,activeTab,selAT,selRM,null,selDM);
+  const sdGoal     = selSD ? generateGoal(selectedStd,activeTab,selAT,selRM,selSD,selDM) : null;
+  const clDone     = bookAdaptItems.filter(i=>checklist[i.id]).length;
+  const dmForLvl   = activeTab==='abstract'?'probe-data':'observation';
+
+  const dropStds = useMemo(()=>searchTerm?standardsDB.filter(s=>
+    s.text.toLowerCase().includes(searchTerm.toLowerCase())||
+    s.subject.toLowerCase().includes(searchTerm.toLowerCase())||
+    s.id.toLowerCase().includes(searchTerm.toLowerCase())||
+    s.framework.toLowerCase().includes(searchTerm.toLowerCase())||
+    s.skill.toLowerCase().includes(searchTerm.toLowerCase())||
+    s.grade.toLowerCase().includes(searchTerm.toLowerCase())
+  ):standardsDB,[searchTerm]);
+
+  useEffect(()=>{
+    const fn = e => { if(searchRef.current&&!searchRef.current.contains(e.target)){setDropOpen(false);setFocusIdx(-1);} };
+    document.addEventListener('mousedown',fn);
+    return()=>document.removeEventListener('mousedown',fn);
+  },[]);
+
+  useEffect(()=>{
+    if(focusIdx>=0&&dropRef.current){
+      dropRef.current.querySelectorAll('[data-opt]')[focusIdx]?.scrollIntoView({block:'nearest'});
+    }
+  },[focusIdx]);
+
+  const selectStd = std => { setSelectedStd(std); setSearchTerm(''); setDropOpen(false); setFocusIdx(-1); setSelAT(null); setChecklist({}); };
+  const clearAll  = ()  => { setSelectedStd(null);setSearchTerm('');setSelSD(null);setSelRM(null);setSelAT(null);setSelDM(null);setChecklist({});setShowCompare(false); };
+
+  const onKey = e => {
+    if(!dropOpen){if(e.key==='ArrowDown'){setDropOpen(true);setFocusIdx(0);e.preventDefault();}return;}
+    if(e.key==='ArrowDown'){e.preventDefault();setFocusIdx(i=>Math.min(i+1,dropStds.length-1));}
+    else if(e.key==='ArrowUp'){e.preventDefault();setFocusIdx(i=>Math.max(i-1,0));}
+    else if(e.key==='Enter'&&focusIdx>=0){e.preventDefault();selectStd(dropStds[focusIdx]);}
+    else if(e.key==='Escape'){setDropOpen(false);setFocusIdx(-1);}
+  };
+
+  const gradeLabel = g => g==='All Grades'?'All Grades':g==='Transition'?'Transition':g==='HS'?'HS':`Gr ${g}`;
+
+  return (
+    <div className="min-h-screen bg-slate-100 p-3 md:p-6 text-slate-800">
+      <div className="app-root max-w-5xl mx-auto space-y-5">
+
+        {/* HEADER */}
+        <header className="bg-slate-900 text-white rounded-2xl p-6 shadow-lg">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-yellow-400 rounded-xl shrink-0"><PackageSearch className="text-slate-900" size={28}/></div>
+            <div>
+              <h1 className="display-font text-3xl text-white mb-1">Universal Material &amp; Goal Flowchart</h1>
+              <p className="text-slate-300 text-sm">IEP goal generation for complex learners — {standardsDB.length} verified standards across CCSS ELA 11-12, CCSS Math HS, DLM EEs 11-12, Illinois SEL, and IDEA Transition.</p>
+            </div>
+          </div>
+        </header>
+
+        {/* IDEA TRANSITION NOTE */}
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5"/>
+          <p className="text-xs text-amber-900 leading-relaxed"><strong>IDEA Transition ⓘ</strong> entries are practitioner-synthesized competency frameworks derived from IDEA 2004 (34 C.F.R. §300.320(b)) — not verbatim federal code. Do not cite these codes as verbatim regulatory language in formal IEP documents.</p>
+        </div>
+
+        {/* PHASE 1 — STANDARD SEARCH */}
+        <section className="bg-slate-900 text-white rounded-2xl p-5 shadow-lg border-l-8 border-yellow-400">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="bg-yellow-400 text-slate-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Phase 1</span>
+            <span className="text-slate-300 font-medium">Anchor Standard</span>
+            {selectedStd && <button onClick={clearAll} className="ml-auto text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded transition-colors"><X size={12}/> Clear All</button>}
+          </div>
+          {!selectedStd?(
+            <div ref={searchRef} className="relative">
+              <p className="text-xs text-slate-400 mb-2">Search {standardsDB.length} standards by code, subject, skill, or framework. Use ↑↓ to navigate, Enter to select.</p>
+              <div className="relative">
+                <input ref={inputRef} type="text" role="combobox" aria-expanded={dropOpen}
+                  className="w-full bg-slate-800 border border-slate-600 text-white rounded-xl px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-sm"
+                  placeholder="Try: 'character development', 'CCSS', 'DLM EE', 'money', 'SEL', 'Transition'..."
+                  value={searchTerm}
+                  onChange={e=>{setSearchTerm(e.target.value);setDropOpen(true);setFocusIdx(-1);}}
+                  onFocus={()=>setDropOpen(true)} onKeyDown={onKey}
+                  style={{caretColor:'white'}}/>
+                <div className="absolute left-3 top-3.5 text-slate-400"><Search size={16}/></div>
+                {dropOpen&&(
+                  <div ref={dropRef} role="listbox" className="absolute w-full mt-1 bg-white rounded-xl shadow-2xl border border-slate-200 max-h-72 overflow-y-auto z-50 text-slate-800 fade-in">
+                    {dropStds.length>0?(
+                      <ul className="py-1">
+                        {dropStds.map((std,idx)=>(
+                          <li key={std.id} data-opt role="option" aria-selected={focusIdx===idx}
+                            onClick={()=>selectStd(std)}
+                            className={`px-4 py-3 cursor-pointer border-b border-slate-100 last:border-0 transition-colors ${focusIdx===idx?'bg-indigo-50':'hover:bg-slate-50'}`}>
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <span className="font-bold text-indigo-700 text-sm">{std.id}</span>
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded border ${frameworkColors[std.framework]||'bg-slate-100 text-slate-600 border-slate-200'}`}>{std.framework}</span>
+                              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">{gradeLabel(std.grade)}</span>
+                            </div>
+                            <p className="text-xs text-slate-600 line-clamp-2">{std.text}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    ):(
+                      <p className="p-4 text-center text-slate-500 text-sm">No results for "{searchTerm}"</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ):(
+            <div className="bg-slate-800 border border-yellow-400 rounded-xl p-4 fade-in">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <BookMarked size={16} className="text-yellow-400"/>
+                <span className="font-bold text-yellow-400">{selectedStd.id}</span>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded border ${frameworkColors[selectedStd.framework]||''}`}>{selectedStd.framework}</span>
+                <span className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded">{selectedStd.grade} · {selectedStd.subject}</span>
+              </div>
+              <p className="text-white font-medium leading-snug mb-1">{selectedStd.text}</p>
+              <p className="text-xs text-yellow-200 italic">Target skill: {selectedStd.skill}</p>
+              {selectedStd.framework==='IDEA Transition ⓘ'&&(
+                <div className="mt-3 flex items-start gap-2 bg-yellow-900/20 border border-amber-600 rounded-lg p-2">
+                  <AlertCircle size={12} className="text-amber-400 shrink-0 mt-0.5"/>
+                  <p className="text-xs text-amber-200">Synthesized practitioner competency — do not cite as verbatim federal code in formal IEP documents.</p>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="mt-3 flex items-center gap-2 text-xs text-yellow-200 bg-slate-800 px-3 py-2 rounded-lg">
+            <CheckCircle2 size={13} className="text-yellow-400 shrink-0"/>
+            <span><strong>System rule:</strong> Adapt materials and modes of response — do not change this anchor standard.</span>
+          </div>
+        </section>
+
+        {/* ELA BOOK ADAPTATION CHECKLIST */}
+        {selectedStd&&isELA&&(
+          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden fade-in">
+            <button onClick={()=>setShowCL(v=>!v)} className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-rose-100 rounded-lg text-rose-700"><BookOpen size={18}/></div>
+                <div className="text-left">
+                  <h3 className="font-bold text-slate-800">ELA Book Adaptation Checklist</h3>
+                  <p className="text-xs text-slate-500">Chapter 3, pp. 9-14 — {clDone} of {bookAdaptItems.length} complete</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-rose-500 rounded-full transition-all" style={{width:`${(clDone/bookAdaptItems.length)*100}%`}}/>
+                </div>
+                {showCL?<ChevronUp size={16} className="text-slate-400"/>:<ChevronDown size={16} className="text-slate-400"/>}
+              </div>
+            </button>
+            {showCL&&(
+              <div className="px-5 pb-5 border-t border-slate-100">
+                <p className="text-xs text-slate-500 mt-3 mb-3 leading-relaxed">Use this checklist when adapting any grade-level literary text. Chapter 3 specifies each item as a distinct design decision.</p>
+                <div className="space-y-2">
+                  {bookAdaptItems.map(item=>(
+                    <label key={item.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-rose-50 cursor-pointer transition-colors border border-transparent hover:border-rose-200">
+                      <input type="checkbox" className="mt-0.5 shrink-0" style={{accentColor:'#e11d48'}} checked={!!checklist[item.id]} onChange={()=>setChecklist(prev=>({...prev,[item.id]:!prev[item.id]}))}/>
+                      <span className={`text-sm leading-relaxed ${checklist[item.id]?'line-through text-slate-400':'text-slate-700'}`}>{item.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* SYMBOL USER TABS */}
+        <div>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Select Symbol User Profile (Chapter 1):</p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            {Object.values(symbolProfiles).map(s=>{
+              const Ic=s.icon; const isActive=activeTab===s.id;
+              return(
+                <button key={s.id} onClick={()=>setActiveTab(s.id)}
+                  className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-xl font-bold text-sm transition-all duration-200 ${isActive?`${s.accent} text-white shadow-lg`:'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}>
+                  <Ic size={17}/>{s.title}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* MAIN FLOW CARD */}
+        <div className={`rounded-2xl border-t-8 bg-white shadow-xl ${cur.border} overflow-hidden`}>
+
+          {/* PROFILE */}
+          <div className="p-5 border-b border-slate-100">
+            <p className={`text-xs font-black uppercase tracking-widest ${cur.text} mb-1`}>Diagnostic Profile — {cur.title}</p>
+            <p className="text-base font-medium text-slate-700">{cur.profile}</p>
+          </div>
+
+          {/* PHASE 2 — MATERIALS */}
+          <div className="p-5 border-b border-slate-100">
+            <div className="flex items-center gap-2 mb-4">
+              <div className={`p-2 rounded-lg ${cur.bg}`}><Settings2 className={cur.text} size={18}/></div>
+              <h4 className={`font-bold ${cur.text}`}>Phase 2 — Materials &amp; Adaptations</h4>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">General Adaptation Strategy</p>
+                <p className="text-sm text-slate-700 leading-relaxed">{cur.materials}</p>
+              </div>
+              {selectedStd&&cur.subjectMaterials[subjectCat]&&(
+                <div className={`p-3 rounded-xl ${cur.bg} border ${cur.border}`}>
+                  <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Subject-Specific Materials ({subjectCat})</p>
+                  <p className="text-sm text-slate-700 leading-relaxed">{cur.subjectMaterials[subjectCat]}</p>
+                </div>
+              )}
+            </div>
+            <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Select AT Device / Tool (Chapter 3){selectedStd&&` — ${subjectCat} + General`}</p>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {(selectedStd?availAT:atDevicesBySubject.General).map(device=>{
+                const isSel=selAT?.id===device.id;
+                return(
+                  <button key={device.id} onClick={()=>setSelAT(isSel?null:device)}
+                    className={`text-left p-3 rounded-xl border-2 transition-all card-hover text-sm ${isSel?`${cur.border} ${cur.bg} shadow-md`:'border-slate-200 hover:border-slate-300 bg-slate-50'}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <span className={`font-bold text-sm ${isSel?cur.text:'text-slate-700'}`}>{device.name}</span>
+                      {isSel&&<CheckCircle2 size={15} className={cur.text}/>}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{device.chapter3Note}</p>
+                  </button>
+                );
+              })}
+            </div>
+            {selAT&&(
+              <div className="mt-3 flex items-start gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3 fade-in">
+                <Cpu size={14} className="text-slate-500 shrink-0 mt-0.5"/>
+                <div>
+                  <p className="text-xs font-bold text-slate-700 mb-0.5">Cross-Setting Application (Chapter 3)</p>
+                  <p className="text-xs text-slate-600">
+                    <strong>{selAT.name}</strong> applies across: {selAT.settings.map(s=>(
+                      <span key={s} className={`inline-block px-2 py-0.5 rounded text-xs font-medium mr-1 ${settingBadgeClass(s)}`}>{s}</span>
+                    ))}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* PHASE 3 — SD */}
+          <div className="p-5 border-b border-slate-100">
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`p-2 rounded-lg ${cur.bg}`}><BrainCircuit className={cur.text} size={18}/></div>
+              <div>
+                <h4 className={`font-bold ${cur.text}`}>Phase 3 — Self-Determination Access Vehicle</h4>
+                <p className="text-xs text-slate-500">Chapter 2: Student-specific — not automatic per symbol level. Select the component that creates a natural intersection between this student and the anchor standard.</p>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {sdComponents.map(sd=>{
+                const isSel=selSD?.id===sd.id;
+                return(
+                  <button key={sd.id} onClick={()=>setSelSD(isSel?null:sd)}
+                    className={`text-left p-3 rounded-xl border-2 transition-all card-hover ${isSel?`${sd.border} ${sd.bg} shadow-md`:'border-slate-200 bg-slate-50 hover:border-slate-300'}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`font-bold text-sm ${isSel?sd.text:'text-slate-700'}`}>{sd.name}</span>
+                      {isSel&&<CheckCircle2 size={14} className={sd.text}/>}
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed mb-1">{sd.description}</p>
+                    <p className="text-xs text-slate-500 italic leading-relaxed"><strong>Ch.2:</strong> {sd.chapterExample}</p>
+                  </button>
+                );
+              })}
+            </div>
+            {selSD&&(
+              <div className="mt-4 fade-in">
+                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Before / After — SD Expansion (Chapter 2 pattern)</p>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    <p className="text-xs font-bold text-slate-500 mb-1">Base Academic Objective</p>
+                    <p className="text-sm text-slate-700 leading-relaxed italic">{baseGoal}</p>
+                  </div>
+                  <div className={`p-3 ${selSD.bg} border-2 ${selSD.border} rounded-xl`}>
+                    <p className={`text-xs font-bold mb-1 ${selSD.text}`}>{selSD.expansionLabel} — Expanded Objective</p>
+                    <p className="text-sm text-slate-800 leading-relaxed italic">{sdGoal}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* PHASE 4 — RESPONSE MODE */}
+          <div className="p-5 border-b border-slate-100">
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`p-2 rounded-lg ${cur.bg}`}><Hand className={cur.text} size={18}/></div>
+              <div>
+                <h4 className={`font-bold ${cur.text}`}>Phase 4 — Response Mode</h4>
+                <p className="text-xs text-slate-500">Chapter 3: Five-level hierarchy ordered by degree of support. Select the mode the student can perform reliably.</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {responseModes.map(rm=>{
+                const Ic=rm.icon; const isSel=selRM?.level===rm.level;
+                return(
+                  <button key={rm.level} onClick={()=>setSelRM(isSel?null:rm)}
+                    className={`w-full text-left p-3 rounded-xl border-2 transition-all card-hover ${isSel?`${rm.border} ${rm.bg} shadow-md`:'border-slate-200 bg-slate-50 hover:border-slate-300'}`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${isSel?rm.bg:'bg-white'} border ${isSel?rm.border:'border-slate-200'}`}>
+                        <Ic size={14} className={isSel?rm.text:'text-slate-500'}/>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className={`font-bold text-sm ${isSel?rm.text:'text-slate-700'}`}>Level {rm.level} — {rm.name}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${isSel?`${rm.bg} ${rm.text} border-current`:'bg-slate-100 text-slate-500 border-slate-200'}`}>{rm.support}</span>
+                          {isSel&&<CheckCircle2 size={14} className={rm.text}/>}
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-1">{rm.description}</p>
+                        {isSel&&<p className={`text-xs font-medium leading-relaxed ${rm.text}`}><strong>Data collection note:</strong> {rm.dataNote}</p>}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* PHASE 5 — DATA + SMART GOAL */}
+          <div className="p-5">
+            <div className="mb-5">
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`p-2 rounded-lg ${cur.bg}`}><BarChart2 className={cur.text} size={18}/></div>
+                <div>
+                  <h4 className={`font-bold ${cur.text}`}>Phase 5a — Data Collection Method</h4>
+                  <p className="text-xs text-slate-500">Chapter 1: IEP objectives specify not just the performance criterion but the observational context.</p>
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {dataCollectionMethods.map(dm=>{
+                  const Ic=dm.icon; const isSel=selDM?.id===dm.id; const isRec=dm.id===dmForLvl;
+                  return(
+                    <button key={dm.id} onClick={()=>setSelDM(isSel?null:dm)}
+                      className={`text-left p-3 rounded-xl border-2 transition-all card-hover ${isSel?`${dm.border} ${dm.bg} shadow-md`:'border-slate-200 bg-slate-50 hover:border-slate-300'}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <Ic size={13} className={isSel?dm.text:'text-slate-400'}/>
+                          <span className={`font-bold text-xs ${isSel?dm.text:'text-slate-700'}`}>{dm.name}</span>
+                        </div>
+                        {isRec&&!isSel&&<span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded border border-yellow-200 font-medium">Suggested</span>}
+                        {isSel&&<CheckCircle2 size={13} className={dm.text}/>}
+                      </div>
+                      <p className="text-xs text-slate-500 leading-relaxed">{dm.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* SMART GOAL OUTPUT */}
+            <div className={`relative p-5 rounded-2xl border-2 ${cur.border} bg-white shadow-sm ${selectedStd?'ring-4 ring-yellow-200 ring-offset-2':''}`}>
+              <div className={`absolute -top-3 left-5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow ${cur.accent}`}>
+                Phase 5b — Generated SMART Goal
+              </div>
+              <p className="text-base font-medium text-slate-800 leading-relaxed mt-1 mb-4">{goal}</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  {label:'S',value:selectedStd?selectedStd.skill:'Active engagement'},
+                  {label:'M',value:selDM?selDM.badge:'Select data method above'},
+                  {label:'A',value:selAT?selAT.name:'AT not specified'},
+                  {label:'R',value:selectedStd?`${selectedStd.id} (${selectedStd.framework})`:'No standard selected'},
+                  {label:'T',value:'[Date]'},
+                ].map(({label,value})=>(
+                  <span key={label} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs border font-medium ${
+                    label==='R'&&selectedStd?'bg-yellow-100 text-yellow-800 border-yellow-300':
+                    label==='A'&&selAT?`${cur.bg} ${cur.text} ${cur.border}`:
+                    label==='M'&&selDM?`${selDM.bg} ${selDM.text} ${selDM.border}`:
+                    'bg-slate-100 text-slate-600 border-slate-200'
+                  }`}><strong>{label}:</strong> {value}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* COMPARE ALL PROFILES */}
+            <div className="mt-4">
+              <button onClick={()=>setShowCompare(v=>!v)} disabled={!selectedStd}
+                className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 font-bold text-sm transition-all ${selectedStd?'border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700':'border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed'}`}>
+                <LayoutGrid size={16}/>
+                {showCompare?'Hide':'Compare All Three Symbol Level Goals'}
+                {!selectedStd&&<span className="text-xs font-normal">(select a standard first)</span>}
+                {showCompare?<ChevronUp size={14}/>:<ChevronDown size={14}/>}
+              </button>
+              {showCompare&&selectedStd&&(
+                <div className="mt-4 grid md:grid-cols-3 gap-4 fade-in">
+                  {Object.values(symbolProfiles).map(profile=>{
+                    const g = generateGoal(selectedStd,profile.id,selAT,selRM,selSD,selDM);
+                    const Ic = profile.icon;
+                    return(
+                      <div key={profile.id} className={`p-4 rounded-xl border-t-4 ${profile.border} bg-white shadow-sm`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Ic size={15} className={profile.text}/>
+                          <p className={`font-bold text-sm ${profile.text}`}>{profile.title}</p>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">{g}</p>
+                        <div className="mt-2 pt-2 border-t border-slate-100">
+                          <p className={`text-xs font-medium ${profile.text}`}>Default response mode:</p>
+                          <p className="text-xs text-slate-500">{profile.id==='beginning'?'Level 5 — Switch Activation':profile.id==='concrete'?'Level 2-3 — Pointing or Velcro Pull':'Level 1 — Verbal or Text Selection'}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <p className="text-center text-xs text-slate-400 pb-4">
+          Based on Browder et al. — Chapters 1 (Symbol User Framework), 2 (Self-Determination), and 3 (AT and Adaptation) · {standardsDB.length} standards across CCSS ELA 11-12, CCSS Math HS, DLM EEs 11-12, Illinois SEL, and IDEA Transition
+        </p>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
