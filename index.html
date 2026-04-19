@@ -1,0 +1,251 @@
+import React, { useState } from 'react';
+import { 
+  GitMerge, 
+  Target, 
+  User, 
+  MessageCircle, 
+  Zap, 
+  ArrowDown, 
+  Check,
+  Eye,
+  Hand,
+  Monitor,
+  BookOpen
+} from 'lucide-react';
+
+// Design System Colors
+const theme = {
+  phase1: { bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-800', accent: 'bg-blue-500' },
+  phase2: { bg: 'bg-emerald-50', border: 'border-emerald-500', text: 'text-emerald-800', accent: 'bg-emerald-500' },
+  phase3: { bg: 'bg-violet-50', border: 'border-violet-500', text: 'text-violet-800', accent: 'bg-violet-500' },
+  phase4: { bg: 'bg-amber-50', border: 'border-amber-500', text: 'text-amber-800', accent: 'bg-amber-500' },
+  phase5: { bg: 'bg-rose-50', border: 'border-rose-500', text: 'text-rose-800', accent: 'bg-rose-500' },
+};
+
+const ConnectingLine = () => (
+  <div className="flex justify-center w-full my-2">
+    <div className="h-8 w-1 bg-gradient-to-b from-slate-300 to-slate-400 rounded-full relative">
+      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-slate-400">
+        <ArrowDown size={20} />
+      </div>
+    </div>
+  </div>
+);
+
+const FlowCard = ({ title, ifText, thenText, icon: Icon, themeColors, isFocusPath, isSpotlightOn }) => {
+  // Determine visual state based on Spotlight Mode
+  const isActive = isSpotlightOn && isFocusPath;
+  const isMuted = isSpotlightOn && !isFocusPath;
+
+  const cardClasses = `
+    relative p-6 rounded-2xl border-2 transition-all duration-500 ease-in-out
+    ${themeColors.bg} ${themeColors.border}
+    ${isActive ? 'scale-[1.02] shadow-xl ring-4 ring-offset-2 ' + themeColors.border.replace('border-', 'ring-').replace('500', '300') : 'shadow-sm hover:shadow-md'}
+    ${isMuted ? 'opacity-40 grayscale scale-95' : 'opacity-100'}
+  `;
+
+  return (
+    <div className={cardClasses}>
+      {isActive && (
+        <div className={`absolute -top-3 -right-3 ${themeColors.accent} text-white p-1 rounded-full shadow-lg animate-bounce`}>
+          <Check size={20} />
+        </div>
+      )}
+      
+      <div className="flex items-center gap-4 mb-4 border-b pb-4 border-black/5">
+        <div className={`p-3 rounded-xl bg-white shadow-sm ${themeColors.text}`}>
+          <Icon size={24} strokeWidth={2.5} />
+        </div>
+        <h3 className={`font-extrabold text-lg tracking-tight ${themeColors.text}`}>{title}</h3>
+      </div>
+      
+      <div className="space-y-3">
+        <div className="flex gap-3 items-start">
+          <span className="font-black text-slate-800 bg-white px-2 py-1 rounded text-xs tracking-wider shadow-sm border border-slate-100">IF</span>
+          <p className="text-sm font-medium text-slate-700 pt-1">{ifText}</p>
+        </div>
+        <div className="flex gap-3 items-start">
+          <span className={`font-black text-white ${themeColors.accent} px-2 py-1 rounded text-xs tracking-wider shadow-sm`}>THEN</span>
+          <p className="text-sm font-bold text-slate-800 pt-1 leading-snug">{thenText}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default function App() {
+  const [spotlightOn, setSpotlightOn] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8 selection:bg-indigo-200">
+      <div className="max-w-5xl mx-auto">
+        
+        {/* Header / Control Panel */}
+        <header className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200 mb-12 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-2 h-full bg-indigo-500"></div>
+          <div>
+            <p className="text-indigo-600 font-bold tracking-widest text-xs uppercase mb-2">Instructional Architecture</p>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 mb-2">Standards-Aligned Flowchart</h1>
+            <p className="text-slate-500 max-w-xl">Mapping the journey from grade-level expectations to individualized student access points.</p>
+          </div>
+          
+          <button 
+            onClick={() => setSpotlightOn(!spotlightOn)}
+            className={`
+              group relative flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-sm transition-all duration-300 overflow-hidden
+              ${spotlightOn 
+                ? 'bg-indigo-900 text-indigo-50 shadow-xl shadow-indigo-900/20 translate-y-0' 
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-md'}
+            `}
+          >
+            {spotlightOn && <div className="absolute inset-0 bg-indigo-800 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>}
+            <div className="relative flex items-center gap-2">
+              <Zap size={18} className={spotlightOn ? "text-yellow-400 fill-yellow-400" : "text-slate-400"} />
+              <span>{spotlightOn ? 'Student J Spotlight Active' : 'Activate Student J Spotlight'}</span>
+            </div>
+          </button>
+        </header>
+
+        <div className="space-y-4 relative">
+          
+          {/* Phase 1 */}
+          <div className="flex flex-col items-center">
+            <div className="bg-blue-500 text-white text-xs font-bold px-4 py-1 rounded-full mb-4 shadow-sm uppercase tracking-widest">Phase 1: The Anchor</div>
+            <div className="w-full md:w-2/3">
+              <FlowCard 
+                themeColors={theme.phase1} icon={Target}
+                title="Grade-Level-First Principle"
+                ifText="The student is assigned to Grade X (e.g., 12th Grade)."
+                thenText="Begin with the Grade X State Standard. DO NOT substitute a lower grade-level standard."
+                isFocusPath={true} isSpotlightOn={spotlightOn}
+              />
+            </div>
+          </div>
+
+          <ConnectingLine />
+
+          {/* Phase 2 */}
+          <div className="flex flex-col items-center">
+            <div className="bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full mb-4 shadow-sm uppercase tracking-widest">Phase 2: Symbol User Level</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+              <FlowCard 
+                themeColors={theme.phase2} icon={User}
+                title="Beginning Symbol User"
+                ifText="Relies on non-symbolic communication (sounds, movement)."
+                thenText="Focus on objects of reference and sensory interaction."
+                isFocusPath={false} isSpotlightOn={spotlightOn}
+              />
+              <FlowCard 
+                themeColors={theme.phase2} icon={BookOpen}
+                title="Concrete Symbol User"
+                ifText="Discriminates photos/drawings; early literacy skills."
+                thenText="Use considerate text, picture-symbol support, and repeated story lines."
+                isFocusPath={true} isSpotlightOn={spotlightOn}
+              />
+              <FlowCard 
+                themeColors={theme.phase2} icon={Monitor}
+                title="Abstract Symbol User"
+                ifText="Has sight word vocabulary and functional reading skills."
+                thenText="Provide adapted chapter books with embedded definitions."
+                isFocusPath={false} isSpotlightOn={spotlightOn}
+              />
+            </div>
+          </div>
+
+          <ConnectingLine />
+
+          {/* Phase 3 */}
+          <div className="flex flex-col items-center">
+            <div className="bg-violet-500 text-white text-xs font-bold px-4 py-1 rounded-full mb-4 shadow-sm uppercase tracking-widest">Phase 3: Access Vehicle</div>
+            <div className="w-full md:w-2/3">
+              <FlowCard 
+                themeColors={theme.phase3} icon={GitMerge}
+                title="Self-Determination Bridge"
+                ifText="The student lacks an obvious entry point to the academic task."
+                thenText="Map an existing self-determination strength (e.g., choice-making) directly to the standard."
+                isFocusPath={true} isSpotlightOn={spotlightOn}
+              />
+            </div>
+          </div>
+
+          <ConnectingLine />
+
+          {/* Phase 4 */}
+          <div className="flex flex-col items-center">
+            <div className="bg-amber-500 text-white text-xs font-bold px-4 py-1 rounded-full mb-4 shadow-sm uppercase tracking-widest">Phase 4: Mode of Response</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+              <FlowCard 
+                themeColors={theme.phase4} icon={MessageCircle}
+                title="Verbal / Vocal"
+                ifText="Can approximate speech consistently."
+                thenText="Prioritize verbal generation or approximation."
+                isFocusPath={true} isSpotlightOn={spotlightOn}
+              />
+              <FlowCard 
+                themeColors={theme.phase4} icon={Hand}
+                title="Point / Exchange"
+                ifText="Verbal is taxing or inconsistent."
+                thenText="Use Pointing to Response Board or Picture Exchange."
+                isFocusPath={true} isSpotlightOn={spotlightOn}
+              />
+              <FlowCard 
+                themeColors={theme.phase4} icon={Eye}
+                title="Eye-Gaze"
+                ifText="Limited fine motor control."
+                thenText="Utilize Eye-Gaze on a Plexiglas window."
+                isFocusPath={false} isSpotlightOn={spotlightOn}
+              />
+              <FlowCard 
+                themeColors={theme.phase4} icon={Zap}
+                title="Switch / AAC"
+                ifText="Requires maximal physical support."
+                thenText="Utilize Switch Activation or AAC device."
+                isFocusPath={false} isSpotlightOn={spotlightOn}
+              />
+            </div>
+          </div>
+
+          <ConnectingLine />
+
+          {/* Phase 5 */}
+          <div className="flex flex-col items-center">
+            <div className="bg-rose-500 text-white text-xs font-bold px-4 py-1 rounded-full mb-4 shadow-sm uppercase tracking-widest">Phase 5: IEP Goal Expansion</div>
+            <div className="w-full md:w-2/3 mb-16">
+              <FlowCard 
+                themeColors={theme.phase5} icon={Target}
+                title="Active Agency via AT"
+                ifText="Original objective places student in a passive role."
+                thenText="Rewrite: 'Using [AT Tool], student will [Active Task] with X% accuracy.'"
+                isFocusPath={true} isSpotlightOn={spotlightOn}
+              />
+            </div>
+          </div>
+
+        </div>
+
+        {/* Dynamic Summary Footer */}
+        <div className={`
+          fixed bottom-0 left-0 w-full bg-slate-900 text-white p-6 shadow-2xl border-t-4 border-indigo-500
+          transition-transform duration-500 ease-in-out z-50
+          ${spotlightOn ? 'translate-y-0' : 'translate-y-[120%]'}
+        `}>
+          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h4 className="text-indigo-300 font-bold text-sm uppercase tracking-wider mb-1">CAP Design Summary</h4>
+              <p className="text-xl font-medium">
+                Student J will read <span className="text-white font-black">Tyrell</span> (12th Grade Standard) using <span className="text-emerald-400 font-black">Considerate Text</span> and demonstrate comprehension via <span className="text-amber-400 font-black">Picture Exchange/Verbal Appx.</span>
+              </p>
+            </div>
+            <button 
+              onClick={() => setSpotlightOn(false)}
+              className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold text-slate-300 transition-colors whitespace-nowrap"
+            >
+              Close Spotlight
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
